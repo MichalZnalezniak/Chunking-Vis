@@ -58,7 +58,7 @@ uv run python manage.py runserver localhost:8000
 
 ## Tech Stack
 - **Backend:** Django  
-- **Frontend:** HTMX + Tailwind *(adjust if different)*  
+- **Frontend:** HTMX + Tailwind
 - **LLMs:** GPT-4o tokenizer, Phi-3 for agentic chunking  
 - **Deployment:** Railway
 
