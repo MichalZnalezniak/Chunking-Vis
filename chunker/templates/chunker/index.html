@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        {% load static %}
+        <link rel="stylesheet" href="{% static 'chunker/css/style.css' %}">
+        {% load dict_extras %}
+        <link href="https://fonts.googleapis.com/css2?family=Hammersmith+One&display=swap" rel="stylesheet">
+        <title>Chunking Visualizer</title>
+        <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='28' font-size='28'>📄</text></svg>">
+
+    </head>
+    <body>
+        <div class="container">
+            <div class="row single">
+                <div class="item">
+                    <h3 style="font-size: 50px;"> ✂️ Chunking Visualizer 📄 </h3>
+                </div>
+            </div>
+            <div class="row single" style="border-bottom: 1px solid #080000fd; padding-bottom: 30px;
+">
+                <div class="item" style="font-size:20px">
+                    <div>
+                        Explore how different chunking strategies shape what a retrieval system can find. <br> <br>
+
+                        Well-structured chunks lead to more relevant retrieval results and cleaner inputs for downstream LLM reasoning. <br> <br>
+
+                        See how your text becomes searchable chunks — and how your chunking settings influence what retrieval systems pick up.<br>
+                    </div>
+                </div>
+            </div>
+            <form method="post">
+            <div class="row multi" style="padding-top:30px;">
+                <div class="item">
+                    <div class="form-group-small">
+                        <div style="font-size:19px">✂️ {{ form_splitter.splitter.label_tag }} </div>
+                        {{ form_splitter.splitter }}
+                    </div>
+                </div>
+                <div class="item">
+                    <div class="form-group-small">
+                        <div style="font-size:19px">📏 {{ form_chunk_size.chunk_size.label_tag }}</div>
+                        {{ form_chunk_size.chunk_size }}
+                    </div>
+                </div>
+                <div class="item">
+                    <div class="form-group-small">
+                        <div style="font-size:19px">🧩 {{ form_chunk_overlap.chunk_overlap.label_tag }}</div>
+                        {{ form_chunk_overlap.chunk_overlap }}
+                    </div>
+                </div>
+                <div class="item">
+                    <div class="form-group-small">
+                        <div style="font-size:19px">➖ {{ form_separators.separators.label_tag }}</div>
+                        {{ form_separators.separators }}
+                    </div>
+                </div>
+                <div class="item"></div>
+            </div>
+
+            <div class="row single">
+                <div class="item">
+                    {% csrf_token %}
+                        <div class="form-group">
+                            <div style="font-size: 20px; margin-left: 5px">
+                                Input Text:
+                                {% if  form_text_to_chunk.text_to_chunk.errors %}
+                                <span style="color:red;">
+                                    {{ form_text_to_chunk.text_to_chunk.errors }}
+                                </span>
+                                {% endif %}
+                            </div>
+                            {{ form_text_to_chunk.text_to_chunk }}
+                        </div>
+                    </div>
+            </div>
+
+            <div class="row single">
+                <div class="item">
+                    <button type="submit" name='chunk' class="btn btn-primary">Chunk it!</button>
+                </div>
+            </form>
+            </div>
+
+            <div class="row multi" style="padding-left: 110px; padding-right: 110px">
+                <div class="item-info">
+                    <div class="stat-title">Total number of chunk:</div>
+                    <div class="stat-value">{{ chunks_number }}</div>
+                </div>
+                <div class="item-info purple">
+                    <div class="stat-title">Total Characters:</div>
+                    <div class="stat-value">{{ characters_number }}</div>
+                </div>
+                <div class="item-info green"> 
+                    <div class="stat-title">Average chunk size:</div>
+                    <div class="stat-value"> {{ average_chunk_size }}</div>
+
+                </div>
+            </div>
+            <!-- <div class="row single">
+                <div class="item">Pros and Cons for selected splitter</div>
+            </div>
+            <div class="row multi">
+                <div class="item">Pros</div>
+                <div class="item">Cons</div>
+            </div> -->
+            <div class="row single">
+                <div class="item">
+                    <div style="font-size: 40px;">Chunked Text</div>
+                </div>
+            </div>
+
+            <div class="row single">
+                <div class="item"> 
+                    <div class="chunked-text">
+                        <p> {{ chunked_text_html|safe }} </p>
+                    </div>
+                </div>
+            </div>
+            <div class="row single" style="padding-bottom: 30px;">
+                <div class="item">
+                    <form method="post">
+                    {% csrf_token %}
+                        <button type="submit" name="snapshot-add" class="btn btn-primary">Save Snap-Shot</button>
+                        {% if snapshots %}
+                            <button type="submit" name="snapshot-remove" class="btn btn-primary">Remove last Snap-Shot</button>
+                        {% endif %}
+                    </form>
+                </div>
+            </div>
+            {% if snapshots %}
+             <div class="row single">
+                <div class="item">
+                    <div style="font-size: 40px;">Snap-Shots</div>
+                </div>
+            </div>
+            {% endif %}
+            <div class="row double">
+                {% for snapshot in snapshots %}
+                    <div class="item-snapshot">
+                        Snap-shot {{ forloop.counter }}
+                        <div class="row multi">
+                            <div class="item-info-snapshot"> 
+                                <div class="stat-title-snapshot">Chunk size: {{ snapshot|get_item:"chunk_size" }}</div>
+                            </div>
+                            <div class="item-info-snapshot"> 
+                                <div class="stat-title-snapshot">Chunk overlap: {{ snapshot|get_item:"chunk_overlap" }}</div>
+                            </div>
+                            <div class="item-info-snapshot"> 
+                                <div class="stat-title-snapshot">Splitter: {{ snapshot|get_item:"splitter" }}</div>
+                            </div>
+                            {% if snapshot|get_item:"separators" %}
+                            <div class="item-info-snapshot"> 
+                                <div class="stat-title-snapshot">Separators: {{ snapshot|get_item:"separators" }}</div>
+                            </div>
+                            {% endif %}
+
+                        </div>
+                        {% with key="html" %}
+                           <div style="text-align: justify; margin-top:10px"> {{ snapshot|get_item:key|safe }} </div>
+                        {% endwith %}
+                    </div>
+                {% endfor %}
+            </div>
+            <div class="row single" style="border-top: 1px solid #080000fd;">
+                <div class="item">
+                    <div style="font-size: 30px;">Help</div>
+                    <b>Chunk Display</b> - <span style="background-color: #FFF3B0;">Each chunk appears in a </span> <span style="background-color: #FFD5C2;">different color </span> <span style="background-color: #CCF2D0;">so you can </span> <span style="background-color: #D6E6F2;">easily distinguish </span> <span style="background-color: #E5D9F2;"> between segments</span>.<br></br>
+                    <b>Chunk Size</b> -   How many characters/words/tokens each chunk contains.<br></br>
+                    <b>Chunk Overlap</b> -  How many characters/words/tokens chunks share, displayed in <span style="background-color: #d3d3d3;">gray</span> to highlight the overlap.<br></br>
+                    <b>Splitter Type</b> - Method used to divide the text.<br></br>
+                    <b>Separators<b> - Patterns which determines where the text is split.<br></br>
+                    <b>Snap-Shoting<b> - Allows to save current state of chunking for comparison.<br></br>
+                    <div style="margin-top: 10px; font-size: 22px;">
+                        💡 Created by <a style="color: #1D4ED8; text-decoration: underline;" href="https://github.com/MichalZnalezniak">Michał Znaleźniak</a> 💡
+                    </div>
+            </div>
+        </div>
+            <div style="display: inline-block; float: right; margin-bottom: 20px;">
+                <a href="https://github.com/MichalZnalezniak" target="_blank" rel="noopener noreferrer">
+                    <img src="{% static 'github-mark.png' %}" alt="GitHub" width="32" height="32">
+                </a>                   
+            </div>
+        </div>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                const splitterSelect = document.querySelector(".my-dropdown");
+                const separatorsInput = document.querySelector(".my-input2");
+                const chunkOverlapInput = document.querySelector(".chunk_size_overlap"); // select your form input
+                const chunkSizeInput = document.querySelector(".chunk_size"); // select your form input
+                function updateInputs() {
+                        let previousChunk = localStorage.getItem("previous_chunk_value") || "";
+                        let previousOverlap = localStorage.getItem("previous_chunk_overlap_value") || "";
+                        const value = splitterSelect.value;
+                        if (value === "Recursive Splitter") {
+                            separatorsInput.value = "'\\n\\n', '\\n', ' ', '' ";
+                            separatorsInput.disabled = false;
+                            if (chunkOverlapInput.value) {
+                                localStorage.setItem("previous_chunk_overlap_value", chunkOverlapInput.value );
+                            } 
+                            chunkOverlapInput.value = "";
+                            chunkOverlapInput.disabled = true;
+                            chunkSizeInput.disabled = false;
+                            if (previousChunk != "") {
+                                chunkSizeInput.value = previousChunk
+                                localStorage.setItem("previous_chunk_value", "");
+                            }
+                        } 
+                        else if (value === "Token Splitter" || value === "Character Splitter") {
+                            separatorsInput.disabled = true;
+                            separatorsInput.value = "";
+                            chunkOverlapInput.disabled = false;
+                            chunkSizeInput.disabled = false;
+                            if (previousOverlap != "") {
+                                chunkOverlapInput.value = previousOverlap
+                                localStorage.setItem("previous_chunk_overlap_value", "");
+                            }
+                            if (previousChunk != "") {
+                                chunkSizeInput.value = previousChunk
+                                localStorage.setItem("previous_chunk_value", "");
+                            }
+                        } 
+                        else if (value === "Word Splitter") {
+                            separatorsInput.disabled = true;
+                            separatorsInput.value = "";
+                            chunkOverlapInput.disabled = false;
+                            if (previousOverlap != "") {
+                                chunkOverlapInput.value = previousOverlap
+                                localStorage.setItem("previous_chunk_overlap_value", "");
+                            }
+                            chunkSizeInput.disabled = false;
+                            if (previousChunk != "") {
+                                chunkSizeInput.value = previousChunk
+                                localStorage.setItem("previous_chunk_value", "");
+                            }
+                        } 
+                        else if (value === "Semantic Splitter" || value === "Agentic Splitter") {
+                            separatorsInput.disabled = true;
+                            separatorsInput.value = "";
+                            if (chunkOverlapInput.value) {
+                                localStorage.setItem("previous_chunk_overlap_value", chunkOverlapInput.value );
+     
+                            }                         
+                            chunkOverlapInput.disabled = true;
+                            chunkOverlapInput.value = "";
+                            if (chunkSizeInput.value) {
+                                localStorage.setItem("previous_chunk_value", chunkSizeInput.value );
+     
+                            }    
+                            chunkSizeInput.disabled = true;
+                            chunkSizeInput.value = "";
+                        }
+                    }
+                updateInputs();
+                splitterSelect.addEventListener("change", updateInputs);
+            });
+    </script>
+    </body>
+</html>

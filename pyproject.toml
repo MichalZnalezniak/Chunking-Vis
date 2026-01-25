@@ -1,0 +1,52 @@
+[project]
+name = "chunking-demo"
+version = "0.1.0"
+description = "Chunking demo visualizer"
+readme = "README.md"
+requires-python = ">=3.12,<3.13"
+
+dependencies = [
+    "django>=5.0",
+    "django-environ>=0.12.0",
+    "gunicorn>=23.0.0",
+    "onnxruntime>=1.23.2",
+    "onnxruntime-genai>=0.11.4",
+    "scikit-learn>=1.7.2",
+    "tiktoken>=0.12.0",
+    "tokenizers>=0.22.1",
+    "whitenoise>=6.11.0",
+]
+
+[tool.ruff]
+line-length = 135
+fix = true
+
+# Enable standard linting sets
+select = [
+    "E",
+    "F",
+    "W",
+    "I",
+    "UP",
+    "DJ",
+]
+
+exclude = [
+    ".venv",
+    "migrations",
+    "__pycache__",
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["chunking-demo", "apps"]
+
+# Optional formatting block (not required but recommended)
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+line-ending = "lf"
+
+[dependency-groups]
+dev = [
+    "ruff>=0.14.10",
+]
