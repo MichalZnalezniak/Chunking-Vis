@@ -1,6 +1,7 @@
 # Chunking-Vis
 A tool for visualizing different text-chunking methods.
 
+## Images
 ![homepage](./images/homepage.png)
 
 ## Features
